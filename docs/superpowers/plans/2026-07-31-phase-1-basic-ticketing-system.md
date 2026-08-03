@@ -11,7 +11,6 @@
 ## Global Constraints
 
 - 실행 애플리케이션 이름은 `server`다.
-- 초기에는 NestJS 표준 모드를 사용하며 Kafka worker 도입 시 모노레포로 전환한다.
 - ORM은 Prisma를 사용하고 PostgreSQL 연결에는 `@prisma/adapter-pg`를 사용한다.
 - Redis, Kafka, DB row lock, 분산 락과 실제 PG 연동은 1단계 범위에서 제외한다.
 - 데이터 정합성 규칙은 service와 PostgreSQL 제약 조건으로 표현한다.
@@ -52,6 +51,7 @@ prisma.config.ts                   # Prisma CLI 설정
 ### Task 1: NestJS `server`와 Health API
 
 **Files:**
+
 - Create: `package.json`
 - Create: `nest-cli.json`
 - Create: `tsconfig.json`
@@ -64,6 +64,7 @@ prisma.config.ts                   # Prisma CLI 설정
 - Delete after scaffold: `src/app.service.ts`
 
 **Interfaces:**
+
 - Produces: `GET /health -> { status: "ok" }`
 
 - [ ] **Step 1: NestJS 표준 애플리케이션 생성**
@@ -79,17 +80,17 @@ Expected: 루트에 `package.json`, `nest-cli.json`, `src/`, `test/`가 생성�
 - [ ] **Step 2: Health API의 실패 테스트 작성**
 
 ```typescript
-import { Test } from '@nestjs/testing';
-import { HealthController } from './health.controller';
+import { Test } from "@nestjs/testing";
+import { HealthController } from "./health.controller";
 
-describe('HealthController', () => {
-  it('프로세스가 요청을 받을 수 있으면 ok를 반환한다', async () => {
+describe("HealthController", () => {
+  it("프로세스가 요청을 받을 수 있으면 ok를 반환한다", async () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [HealthController],
     }).compile();
 
     const controller = moduleRef.get(HealthController);
-    expect(controller.check()).toEqual({ status: 'ok' });
+    expect(controller.check()).toEqual({ status: "ok" });
   });
 });
 ```
@@ -103,13 +104,13 @@ Expected: `HealthController`가 존재하지 않아 FAIL.
 - [ ] **Step 4: 최소 HealthController 구현**
 
 ```typescript
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get } from "@nestjs/common";
 
-@Controller('health')
+@Controller("health")
 export class HealthController {
   @Get()
-  check(): { status: 'ok' } {
-    return { status: 'ok' };
+  check(): { status: "ok" } {
+    return { status: "ok" };
   }
 }
 ```
@@ -135,6 +136,7 @@ git commit -m "feat: bootstrap ticketing server"
 ### Task 2: PostgreSQL과 Prisma 연결
 
 **Files:**
+
 - Create: `docker-compose.yml`
 - Create: `.env.example`
 - Create: `prisma.config.ts`
@@ -145,6 +147,7 @@ git commit -m "feat: bootstrap ticketing server"
 - Modify: `src/app.module.ts`
 
 **Interfaces:**
+
 - Produces: 전역 주입 가능한 `PrismaService`
 - Produces: 개발 DB `postgresql://ticketing:ticketing@localhost:5432/ticketing`
 
@@ -175,8 +178,8 @@ afterAll(async () => {
   await prisma.onModuleDestroy();
 });
 
-describe('Database connection', () => {
-  it('PostgreSQL에 질의할 수 있다', async () => {
+describe("Database connection", () => {
+  it("PostgreSQL에 질의할 수 있다", async () => {
     const rows = await prisma.$queryRaw<Array<{ value: number }>>`
       SELECT 1 AS value
     `;
@@ -234,6 +237,7 @@ git commit -m "feat: connect server to postgresql with prisma"
 ### Task 3: 열차 운행과 좌석 조회
 
 **Files:**
+
 - Modify: `prisma/schema.prisma`
 - Create: `prisma/seed.ts`
 - Create: `src/train/train.module.ts`
@@ -246,6 +250,7 @@ git commit -m "feat: connect server to postgresql with prisma"
 - Modify: `src/app.module.ts`
 
 **Interfaces:**
+
 - Produces: `TrainService.search(departureStation, arrivalStation, serviceDate)`
 - Produces: `GET /train-runs?departureStation=SEOUL&arrivalStation=BUSAN&serviceDate=YYYY-MM-DD`
 - Produces: `GET /train-runs/:trainRunId/seats`로 좌석 ID, 객차, 좌석 번호, 가격과 상태 조회
@@ -253,16 +258,10 @@ git commit -m "feat: connect server to postgresql with prisma"
 - [ ] **Step 1: 검색 service 실패 테스트 작성**
 
 ```typescript
-it('출발지, 도착지와 운행일이 일치하는 열차를 반환한다', async () => {
-  repository.findRuns.mockResolvedValue([
-    { id: 'run-1', trainNumber: 'KTX-101', availableSeatCount: 20 },
-  ]);
+it("출발지, 도착지와 운행일이 일치하는 열차를 반환한다", async () => {
+  repository.findRuns.mockResolvedValue([{ id: "run-1", trainNumber: "KTX-101", availableSeatCount: 20 }]);
 
-  await expect(
-    service.search('SEOUL', 'BUSAN', '2026-08-01'),
-  ).resolves.toEqual([
-    { id: 'run-1', trainNumber: 'KTX-101', availableSeatCount: 20 },
-  ]);
+  await expect(service.search("SEOUL", "BUSAN", "2026-08-01")).resolves.toEqual([{ id: "run-1", trainNumber: "KTX-101", availableSeatCount: 20 }]);
 });
 ```
 
@@ -307,6 +306,7 @@ git commit -m "feat: add train run and seat search"
 ### Task 4: 좌석 임시 점유
 
 **Files:**
+
 - Modify: `prisma/schema.prisma`
 - Create: `src/seat-hold/seat-hold.module.ts`
 - Create: `src/seat-hold/seat-hold.controller.ts`
@@ -320,35 +320,40 @@ git commit -m "feat: add train run and seat search"
 - Modify: `src/app.module.ts`
 
 **Interfaces:**
+
 - Produces: `SeatHoldService.create({ trainRunId, seatId, userId })`
 - Produces: `POST /seat-holds -> { holdId, expiresAt }`
 
 - [ ] **Step 1: 좌석 점유 규칙 테스트 작성**
 
 ```typescript
-it('AVAILABLE 좌석을 5분간 HELD 상태로 만든다', async () => {
-  repository.findSeat.mockResolvedValue({ id: 'seat-1', status: 'AVAILABLE' });
+it("AVAILABLE 좌석을 5분간 HELD 상태로 만든다", async () => {
+  repository.findSeat.mockResolvedValue({ id: "seat-1", status: "AVAILABLE" });
   repository.createHold.mockResolvedValue({
-    id: 'hold-1',
-    expiresAt: new Date('2026-08-01T00:05:00.000Z'),
+    id: "hold-1",
+    expiresAt: new Date("2026-08-01T00:05:00.000Z"),
   });
 
   const result = await service.create({
-    trainRunId: 'run-1',
-    seatId: 'seat-1',
-    userId: 'user-1',
+    trainRunId: "run-1",
+    seatId: "seat-1",
+    userId: "user-1",
   });
 
-  expect(result.id).toBe('hold-1');
+  expect(result.id).toBe("hold-1");
   expect(repository.createHold).toHaveBeenCalledTimes(1);
 });
 
-it('이미 점유된 좌석은 SEAT_NOT_AVAILABLE 오류를 반환한다', async () => {
-  repository.findSeat.mockResolvedValue({ id: 'seat-1', status: 'HELD' });
-  await expect(service.create({
-    trainRunId: 'run-1', seatId: 'seat-1', userId: 'user-1',
-  })).rejects.toMatchObject({
-    code: 'SEAT_NOT_AVAILABLE',
+it("이미 점유된 좌석은 SEAT_NOT_AVAILABLE 오류를 반환한다", async () => {
+  repository.findSeat.mockResolvedValue({ id: "seat-1", status: "HELD" });
+  await expect(
+    service.create({
+      trainRunId: "run-1",
+      seatId: "seat-1",
+      userId: "user-1",
+    }),
+  ).rejects.toMatchObject({
+    code: "SEAT_NOT_AVAILABLE",
   });
 });
 ```
@@ -385,6 +390,7 @@ git commit -m "feat: add temporary seat holds"
 ### Task 5: 가상 결제와 예매 확정
 
 **Files:**
+
 - Modify: `prisma/schema.prisma`
 - Create: `src/payment/payment.port.ts`
 - Create: `src/payment/fake-payment.adapter.ts`
@@ -398,6 +404,7 @@ git commit -m "feat: add temporary seat holds"
 - Modify: `src/app.module.ts`
 
 **Interfaces:**
+
 - Consumes: 유효한 `SeatHold`
 - Produces: `PaymentPort.pay({ paymentKey, amount }) -> { approved: boolean }`
 - Produces: `POST /reservations -> { reservationId, status: "CONFIRMED" }`
@@ -405,28 +412,43 @@ git commit -m "feat: add temporary seat holds"
 - [ ] **Step 1: 예매 service 실패 테스트 작성**
 
 ```typescript
-it('유효한 점유의 결제가 승인되면 예매를 확정한다', async () => {
+it("유효한 점유의 결제가 승인되면 예매를 확정한다", async () => {
   repository.findActiveHold.mockResolvedValue({
-    id: 'hold-1', userId: 'user-1', seatId: 'seat-1', price: 59000,
+    id: "hold-1",
+    userId: "user-1",
+    seatId: "seat-1",
+    price: 59000,
   });
   payment.pay.mockResolvedValue({ approved: true });
-  repository.confirm.mockResolvedValue({ id: 'reservation-1', status: 'CONFIRMED' });
+  repository.confirm.mockResolvedValue({ id: "reservation-1", status: "CONFIRMED" });
 
-  await expect(service.create({
-    holdId: 'hold-1', userId: 'user-1', paymentKey: 'pay_1',
-  })).resolves.toEqual({
-    id: 'reservation-1', status: 'CONFIRMED',
+  await expect(
+    service.create({
+      holdId: "hold-1",
+      userId: "user-1",
+      paymentKey: "pay_1",
+    }),
+  ).resolves.toEqual({
+    id: "reservation-1",
+    status: "CONFIRMED",
   });
 });
 
-it('점유 소유자가 다르면 HOLD_OWNERSHIP_MISMATCH 오류를 반환한다', async () => {
+it("점유 소유자가 다르면 HOLD_OWNERSHIP_MISMATCH 오류를 반환한다", async () => {
   repository.findActiveHold.mockResolvedValue({
-    id: 'hold-1', userId: 'user-2', seatId: 'seat-1', price: 59000,
+    id: "hold-1",
+    userId: "user-2",
+    seatId: "seat-1",
+    price: 59000,
   });
-  await expect(service.create({
-    holdId: 'hold-1', userId: 'user-1', paymentKey: 'pay_1',
-  })).rejects.toMatchObject({
-    code: 'HOLD_OWNERSHIP_MISMATCH',
+  await expect(
+    service.create({
+      holdId: "hold-1",
+      userId: "user-1",
+      paymentKey: "pay_1",
+    }),
+  ).rejects.toMatchObject({
+    code: "HOLD_OWNERSHIP_MISMATCH",
   });
 });
 ```
@@ -463,6 +485,7 @@ git commit -m "feat: confirm reservations with fake payments"
 ### Task 6: 예매 취소
 
 **Files:**
+
 - Modify: `src/reservation/reservation.controller.ts`
 - Modify: `src/reservation/reservation.service.ts`
 - Modify: `src/reservation/reservation.repository.ts`
@@ -470,20 +493,25 @@ git commit -m "feat: confirm reservations with fake payments"
 - Test: `test/reservation-cancel.e2e-spec.ts`
 
 **Interfaces:**
+
 - Produces: `ReservationService.cancel(reservationId, userId)`
 - Produces: `DELETE /reservations/:reservationId -> { status: "CANCELLED" }`
 
 - [ ] **Step 1: 취소 규칙 테스트 작성**
 
 ```typescript
-it('확정 예매를 취소하고 좌석을 다시 AVAILABLE로 만든다', async () => {
+it("확정 예매를 취소하고 좌석을 다시 AVAILABLE로 만든다", async () => {
   repository.findById.mockResolvedValue({
-    id: 'reservation-1', userId: 'user-1', status: 'CONFIRMED', seatId: 'seat-1',
+    id: "reservation-1",
+    userId: "user-1",
+    status: "CONFIRMED",
+    seatId: "seat-1",
   });
-  repository.cancel.mockResolvedValue({ id: 'reservation-1', status: 'CANCELLED' });
+  repository.cancel.mockResolvedValue({ id: "reservation-1", status: "CANCELLED" });
 
-  await expect(service.cancel('reservation-1', 'user-1')).resolves.toEqual({
-    id: 'reservation-1', status: 'CANCELLED',
+  await expect(service.cancel("reservation-1", "user-1")).resolves.toEqual({
+    id: "reservation-1",
+    status: "CANCELLED",
   });
 });
 ```
@@ -516,47 +544,38 @@ git commit -m "feat: cancel confirmed reservations"
 ### Task 7: 전체 예매 E2E와 테스트 격리
 
 **Files:**
+
 - Create: `test/setup.ts`
 - Create: `test/booking-flow.e2e-spec.ts`
 - Modify: `test/jest-e2e.json`
 - Modify: `package.json`
 
 **Interfaces:**
+
 - Consumes: 열차 검색, 좌석 점유, 예매 확정, 예매 취소 API
 - Produces: `npm run test:e2e`로 반복 실행 가능한 전체 흐름 검증
 
 - [ ] **Step 1: 전체 흐름 테스트 작성**
 
 ```typescript
-it('열차 조회부터 예매와 취소까지 완료한다', async () => {
-  const serviceDate = '2026-08-01';
-  const search = await request(app.getHttpServer())
-    .get('/train-runs')
-    .query({ departureStation: 'SEOUL', arrivalStation: 'BUSAN', serviceDate })
-    .expect(200);
+it("열차 조회부터 예매와 취소까지 완료한다", async () => {
+  const serviceDate = "2026-08-01";
+  const search = await request(app.getHttpServer()).get("/train-runs").query({ departureStation: "SEOUL", arrivalStation: "BUSAN", serviceDate }).expect(200);
 
-  const seats = await request(app.getHttpServer())
-    .get(`/train-runs/${search.body[0].id}/seats`)
-    .expect(200);
+  const seats = await request(app.getHttpServer()).get(`/train-runs/${search.body[0].id}/seats`).expect(200);
 
   const hold = await request(app.getHttpServer())
-    .post('/seat-holds')
+    .post("/seat-holds")
     .send({
       trainRunId: search.body[0].id,
       seatId: seats.body[0].id,
-      userId: 'user-1',
+      userId: "user-1",
     })
     .expect(201);
 
-  const reservation = await request(app.getHttpServer())
-    .post('/reservations')
-    .send({ holdId: hold.body.holdId, userId: 'user-1', paymentKey: 'pay_1' })
-    .expect(201);
+  const reservation = await request(app.getHttpServer()).post("/reservations").send({ holdId: hold.body.holdId, userId: "user-1", paymentKey: "pay_1" }).expect(201);
 
-  await request(app.getHttpServer())
-    .delete(`/reservations/${reservation.body.reservationId}`)
-    .send({ userId: 'user-1' })
-    .expect(200);
+  await request(app.getHttpServer()).delete(`/reservations/${reservation.body.reservationId}`).send({ userId: "user-1" }).expect(200);
 });
 ```
 
@@ -589,6 +608,7 @@ git commit -m "test: cover the basic booking journey"
 ### Task 8: Winston JSON 로그
 
 **Files:**
+
 - Create: `src/common/logging/logging.module.ts`
 - Create: `src/common/logging/logging.interceptor.ts`
 - Test: `src/common/logging/logging.interceptor.spec.ts`
@@ -597,18 +617,22 @@ git commit -m "test: cover the basic booking journey"
 - Modify: `package.json`
 
 **Interfaces:**
+
 - Consumes: HTTP request와 response
 - Produces: stdout JSON `{ level, message, requestId, method, path, statusCode, durationMs, service }`
 
 - [ ] **Step 1: 로그 interceptor 실패 테스트 작성**
 
 ```typescript
-it('요청 완료 시 requestId와 처리 시간을 기록한다', async () => {
+it("요청 완료 시 requestId와 처리 시간을 기록한다", async () => {
   await lastValueFrom(interceptor.intercept(context, next));
   expect(logger.info).toHaveBeenCalledWith(
-    'http_request_completed',
+    "http_request_completed",
     expect.objectContaining({
-      requestId: 'req-1', method: 'GET', path: '/health', statusCode: 200,
+      requestId: "req-1",
+      method: "GET",
+      path: "/health",
+      statusCode: 200,
     }),
   );
 });
